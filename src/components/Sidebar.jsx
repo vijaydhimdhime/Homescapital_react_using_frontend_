@@ -89,6 +89,27 @@ const Sidebar = () => {
     navigate("/login");
   };
 
+  const array = [
+    {
+      id: 1,
+      path: '/',
+      iconComponent:  <FaTachometerAlt />,
+      displayText: 'Dashboard'
+    },
+    {
+      id: 2,
+      path: '/applications',
+      iconComponent:  <FaFileAlt />,
+      displayText: 'Applications'
+    },
+    {
+      id: 3,
+      path: '/co-applicants',
+      iconComponent:  <FaUsers />,
+      displayText: 'Applications'
+    }
+    ]
+
   return (
     <div className="w-64 h-screen bg-blue-900 text-white flex flex-col">
       {/* Header */}
@@ -97,7 +118,14 @@ const Sidebar = () => {
       </h2>
 
       {/* Navigation */}
+      
       <nav className="flex flex-col p-4 space-y-2 flex-grow">
+        {
+          array.map(item => ( <Link to={item.path} className="flex items-center space-x-4 p-2 rounded hover:bg-red-700">
+            {item.iconComponent}
+          <span>{item.displayText}</span>
+        </Link>))
+        }
         <Link to="/" className="flex items-center space-x-4 p-2 rounded hover:bg-red-700">
           <FaTachometerAlt />
           <span>Dashboard</span>
@@ -130,6 +158,7 @@ const Sidebar = () => {
           <FaChartBar />
           <span>Reports</span>
         </Link>
+        
       </nav>
 
     </div>
