@@ -33,7 +33,6 @@
 
 // export default App;
 
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
@@ -43,7 +42,9 @@ import Loan from "./pages/Loan";
 import Payment from "./pages/Payment";
 import Subsequent from "./pages/Subsequent";
 import Vendor from "./pages/Vendor";
-import ApplicationList from './pages/ApplicationList';
+import ApplicationList from "./pages/ApplicationList";
+import ApplicationForm from "./pages/ApplicationForm";
+import ApplicationDetails from "./pages/ApplicationDetails";
 
 function App() {
   return (
@@ -59,6 +60,12 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/applications" element={<ApplicationList />} />
+            <Route path="/applications/new" element={<ApplicationForm />} />
+            <Route
+              path="/applications/:id/edit"
+              element={<ApplicationForm />}
+            />
+            <Route path="/applications/:id" element={<ApplicationDetails />} />
             <Route path="/co-applicants" element={<CoApplicant />} />
             <Route path="/loans" element={<Loan />} />
             <Route path="/payments" element={<Payment />} />

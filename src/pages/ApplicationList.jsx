@@ -1481,6 +1481,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -1495,26 +1496,43 @@ import {
   Box,
   Divider,
   CircularProgress,
+  Button,
 } from "@mui/material";
 
 function ApplicationList() {
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
-  const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("");
+  // const [order, setOrder] = useState("asc");
+  // const [orderBy, setOrderBy] = useState("");
+  const [order, setOrder] = useState("desc"); // Default DESC
+  const [orderBy, setOrderBy] = useState("id"); // Default first column (adjust if needed)
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState(""); // 👈 Add this
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // const response = await axios.get(
+        //   `http://127.0.0.1:8000/api/applications/?page=${
+        //     page + 1
+        //   }&page_size=${rowsPerPage}`
+        // );
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/applications/?page=${
-            page + 1
-          }&page_size=${rowsPerPage}`
+          `http://127.0.0.1:8000/api/applications/`,
+          {
+            params: {
+              page: page + 1,
+              page_size: rowsPerPage,
+              search: searchQuery, // 👈 add this line
+              ordering: `${order === "desc" ? "-" : ""}${orderBy}`, // 👈 optional, but your code already supports sorting!
+            },
+          }
         );
 
         const applications = response.data.data.results;
@@ -1529,7 +1547,7 @@ function ApplicationList() {
               .replace(/\b\w/g, (char) => char.toUpperCase()),
           }));
           setColumns(dynamicColumns);
-          setOrderBy(dynamicColumns[0].id);
+          //setOrderBy(dynamicColumns[0].id);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -1539,7 +1557,7 @@ function ApplicationList() {
     };
 
     fetchData();
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, searchQuery, order, orderBy]);
 
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -1581,7 +1599,13 @@ function ApplicationList() {
   const sortedData = stableSort(data, getComparator(order, orderBy));
 
   return (
-    <Box sx={{ p: 4, background: "#e3f2fd", minHeight: "100vh" }}>
+    <Box
+      sx={{
+        p: 4,
+        background: "linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%)",
+        minHeight: "100vh",
+      }}
+    >
       <Paper
         elevation={10}
         sx={{
@@ -1606,9 +1630,42 @@ function ApplicationList() {
           <Typography variant="h5" sx={{ fontWeight: "bold" }}>
             Application List
           </Typography>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => navigate("/applications/new")}
+            sx={{
+              textTransform: "none",
+              fontWeight: "bold",
+              backgroundColor: "#4caf50",
+              "&:hover": {
+                backgroundColor: "#45a049",
+              },
+            }}
+          >
+            + Create Application
+          </Button>
         </Box>
 
         <Divider />
+        <Box sx={{ m: 2, display: "flex", justifyContent: "flex-start" }}>
+          <input
+            type="text"
+            placeholder="Search by Name, PAN, Email, Contact..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(0); // Reset page when search changes
+            }}
+            style={{
+              width: "300px",
+              padding: "8px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+              fontSize: "14px",
+            }}
+          />
+        </Box>
 
         <TableContainer
           sx={{
@@ -1666,6 +1723,17 @@ function ApplicationList() {
                     </TableSortLabel>
                   </TableCell>
                 ))}
+                <TableCell
+                  sx={{
+                    backgroundColor: "#C70039",
+                    color: "#ffffff",
+                    fontWeight: "bold",
+                    py: 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Action
+                </TableCell>
               </TableRow>
             </TableHead>
 
@@ -1699,7 +1767,7 @@ function ApplicationList() {
                       transition: "all 0.3s ease-in-out",
                       height: "48px",
                       "&:hover": {
-                        backgroundColor: "#fff176",
+                        backgroundColor: "primary.light",
                         borderRadius: "16px",
                         boxShadow: "0 8px 24px rgba(255, 202, 40, 0.4)",
                         transform: "scale(1.01)",
@@ -1723,6 +1791,16 @@ function ApplicationList() {
                           : row[column.id]}
                       </TableCell>
                     ))}
+                    <TableCell>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => navigate(`/applications/${row.id}/edit`)}
+                      >
+                        Edit
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -1746,7 +1824,8 @@ function ApplicationList() {
 
 export default ApplicationList;
 
-// render all models in a single page with tabs
+// // Note: Ensure that the API endpoint and data structure match your backend implementation.
+// // above and blow code both are same
 
 // import React, { useEffect, useState } from "react";
 // import axios from "axios";
@@ -1764,212 +1843,67 @@ export default ApplicationList;
 //   Box,
 //   Divider,
 //   CircularProgress,
-//   Tabs,
-//   Tab,
-//   AppBar,
 // } from "@mui/material";
 
-// function AllDataView() {
-//   // State for active tab
-//   const [activeTab, setActiveTab] = useState(0);
+// function ApplicationList() {
+//   const [data, setData] = useState([]);
+//   const [columns, setColumns] = useState([]);
+//   const [order, setOrder] = useState("asc");
+//   const [orderBy, setOrderBy] = useState("");
+//   const [page, setPage] = useState(0);
+//   const [rowsPerPage, setRowsPerPage] = useState(10);
+//   const [totalCount, setTotalCount] = useState(0);
+//   const [loading, setLoading] = useState(false);
 
-//   // State for each table
-//   const [tables, setTables] = useState({
-//     applications: {
-//       data: [],
-//       columns: [],
-//       order: "asc",
-//       orderBy: "",
-//       page: 0,
-//       rowsPerPage: 10,
-//       totalCount: 0,
-//       loading: false,
-//     },
-//     vendors: {
-//       data: [],
-//       columns: [],
-//       order: "asc",
-//       orderBy: "",
-//       page: 0,
-//       rowsPerPage: 10,
-//       totalCount: 0,
-//       loading: false,
-//     },
-//     loans: {
-//       data: [],
-//       columns: [],
-//       order: "asc",
-//       orderBy: "",
-//       page: 0,
-//       rowsPerPage: 10,
-//       totalCount: 0,
-//       loading: false,
-//     },
-//     payments: {
-//       data: [],
-//       columns: [],
-//       order: "asc",
-//       orderBy: "",
-//       page: 0,
-//       rowsPerPage: 10,
-//       totalCount: 0,
-//       loading: false,
-//     },
-//     subsequents: {
-//       data: [],
-//       columns: [],
-//       order: "asc",
-//       orderBy: "",
-//       page: 0,
-//       rowsPerPage: 10,
-//       totalCount: 0,
-//       loading: false,
-//     },
-//     coApplicants: {
-//       data: [],
-//       columns: [],
-//       order: "asc",
-//       orderBy: "",
-//       page: 0,
-//       rowsPerPage: 10,
-//       totalCount: 0,
-//       loading: false,
-//     },
-//   });
-
-//   // API endpoints configuration
-//   const endpoints = {
-//     applications: "http://127.0.0.1:8000/api/applications/",
-//     vendors: "http://127.0.0.1:8000/api/vendors/",
-//     loans: "http://127.0.0.1:8000/api/loans/",
-//     payments: "http://127.0.0.1:8000/api/payments/",
-//     subsequents: "http://127.0.0.1:8000/api/subsequents/",
-//     coApplicants: "http://127.0.0.1:8000/api/co-applicants/",
-//   };
-
-//   // Tab names
-//   const tabNames = [
-//     "Applications",
-//     "Vendors",
-//     "Loans",
-//     "Payments",
-//     "Subsequents",
-//     "Co-Applicants",
-//   ];
-
-//   // Fetch data for a specific table
-//   const fetchTableData = async (tableName) => {
-//     try {
-//       setTables((prev) => ({
-//         ...prev,
-//         [tableName]: {
-//           ...prev[tableName],
-//           loading: true,
-//         },
-//       }));
-
-//       const { page, rowsPerPage } = tables[tableName];
-//       const response = await axios.get(
-//         `${endpoints[tableName]}?page=${page + 1}&page_size=${rowsPerPage}`
-//       );
-
-//       const tableData = response.data.data.results;
-
-//       // Generate columns if not already set
-//       let columns = tables[tableName].columns;
-//       if (tableData.length > 0 && columns.length === 0) {
-//         columns = Object.keys(tableData[0]).map((key) => ({
-//           id: key,
-//           label: key
-//             .replace(/_/g, " ")
-//             .replace(/\b\w/g, (char) => char.toUpperCase()),
-//         }));
-//       }
-
-//       setTables((prev) => ({
-//         ...prev,
-//         [tableName]: {
-//           ...prev[tableName],
-//           data: tableData,
-//           columns,
-//           totalCount: response.data.data.count,
-//           loading: false,
-//         },
-//       }));
-//     } catch (err) {
-//       console.error(`Error fetching ${tableName} data:`, err);
-//       setTables((prev) => ({
-//         ...prev,
-//         [tableName]: {
-//           ...prev[tableName],
-//           loading: false,
-//         },
-//       }));
-//     }
-//   };
-
-//   // Fetch all data when component mounts
 //   useEffect(() => {
-//     Object.keys(endpoints).forEach((tableName) => {
-//       fetchTableData(tableName);
-//     });
-//   }, []);
+//     const fetchData = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await axios.get(
+//           `http://127.0.0.1:8000/api/applications/?page=${
+//             page + 1
+//           }&page_size=${rowsPerPage}`
+//         );
 
-//   // Handle tab change
-//   const handleTabChange = (event, newValue) => {
-//     setActiveTab(newValue);
-//   };
+//         const applications = response.data.data.results;
+//         setData(applications);
+//         setTotalCount(response.data.data.count);
 
-//   // Handle sort request
-//   const handleRequestSort = (tableName, property) => {
-//     setTables((prev) => ({
-//       ...prev,
-//       [tableName]: {
-//         ...prev[tableName],
-//         order:
-//           prev[tableName].orderBy === property &&
-//           prev[tableName].order === "asc"
-//             ? "desc"
-//             : "asc",
-//         orderBy: property,
-//       },
-//     }));
-//   };
-
-//   // Handle page change
-//   const handleChangePage = (tableName, event, newPage) => {
-//     setTables(
-//       (prev) => ({
-//         ...prev,
-//         [tableName]: {
-//           ...prev[tableName],
-//           page: newPage,
-//         },
-//       }),
-//       () => {
-//         fetchTableData(tableName);
+//         if (applications.length > 0 && columns.length === 0) {
+//           const dynamicColumns = Object.keys(applications[0]).map((key) => ({
+//             id: key,
+//             label: key
+//               .replace(/_/g, " ")
+//               .replace(/\b\w/g, (char) => char.toUpperCase()),
+//           }));
+//           setColumns(dynamicColumns);
+//           setOrderBy(dynamicColumns[0].id);
+//         }
+//       } catch (err) {
+//         console.error("Error fetching data:", err);
+//       } finally {
+//         setLoading(false);
 //       }
-//     );
+//     };
+
+//     fetchData();
+//   }, [page, rowsPerPage]);
+
+//   const handleRequestSort = (property) => {
+//     const isAsc = orderBy === property && order === "asc";
+//     setOrder(isAsc ? "desc" : "asc");
+//     setOrderBy(property);
 //   };
 
-//   // Handle rows per page change
-//   const handleChangeRowsPerPage = (tableName, event) => {
-//     setTables(
-//       (prev) => ({
-//         ...prev,
-//         [tableName]: {
-//           ...prev[tableName],
-//           rowsPerPage: parseInt(event.target.value, 10),
-//           page: 0,
-//         },
-//       }),
-//       () => {
-//         fetchTableData(tableName);
-//       }
-//     );
+//   const handleChangePage = (event, newPage) => {
+//     setPage(newPage);
 //   };
 
-//   // Sorting functions
+//   const handleChangeRowsPerPage = (event) => {
+//     setRowsPerPage(parseInt(event.target.value, 10));
+//     setPage(0);
+//   };
+
 //   const stableSort = (array, comparator) => {
 //     const stabilizedThis = array.map((el, index) => [el, index]);
 //     stabilizedThis.sort((a, b) => {
@@ -1992,20 +1926,7 @@ export default ApplicationList;
 //     return 0;
 //   };
 
-//   // Get current active table name
-//   const getActiveTableName = () => {
-//     return Object.keys(tables)[activeTab];
-//   };
-
-//   // Get current active table data
-//   const getActiveTableData = () => {
-//     const tableName = getActiveTableName();
-//     const tableState = tables[tableName];
-//     return stableSort(
-//       tableState.data,
-//       getComparator(tableState.order, tableState.orderBy)
-//     );
-//   };
+//   const sortedData = stableSort(data, getComparator(order, orderBy));
 
 //   return (
 //     <Box sx={{ p: 4, background: "#e3f2fd", minHeight: "100vh" }}>
@@ -2017,7 +1938,6 @@ export default ApplicationList;
 //           overflow: "hidden",
 //         }}
 //       >
-//         {/* Title Box */}
 //         <Box
 //           sx={{
 //             backgroundColor: "#1565c0",
@@ -2029,189 +1949,147 @@ export default ApplicationList;
 //             justifyContent: "space-between",
 //             borderTopLeftRadius: 16,
 //             borderTopRightRadius: 16,
-//             mb: 1,
 //           }}
 //         >
 //           <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-//             Database Tables Overview
+//             Application List
 //           </Typography>
 //         </Box>
 
-//         {/* Tabs */}
-//         <AppBar position="static" color="default">
-//           <Tabs
-//             value={activeTab}
-//             onChange={handleTabChange}
-//             indicatorColor="primary"
-//             textColor="primary"
-//             variant="scrollable"
-//             scrollButtons="auto"
-//           >
-//             {tabNames.map((name, index) => (
-//               <Tab key={index} label={name} />
-//             ))}
-//           </Tabs>
-//         </AppBar>
-
 //         <Divider />
 
-//         {/* Table */}
-//         {Object.keys(tables).map((tableName, index) => (
-//           <div key={tableName} hidden={activeTab !== index}>
-//             <TableContainer
-//               sx={{
-//                 maxHeight: 600,
-//                 borderRadius: "0 0 16px 16px",
-//                 backgroundColor: "#ffffff",
-//                 p: 2,
-//               }}
-//             >
-//               <Table
-//                 stickyHeader
-//                 size="medium"
-//                 sx={{
-//                   fontFamily: "'Roboto Slab', serif",
-//                   "& .MuiTableCell-root": {
-//                     padding: "8px 16px",
-//                     fontSize: "0.875rem",
-//                     fontFamily: "'Roboto Slab', serif",
-//                   },
-//                   "& .MuiTableRow-root": {
-//                     height: "48px",
-//                   },
-//                 }}
-//               >
-//                 <TableHead>
-//                   <TableRow>
-//                     {tables[tableName].columns.map((column) => (
+//         <TableContainer
+//           sx={{
+//             maxHeight: 600,
+//             borderRadius: "0 0 16px 16px",
+//             backgroundColor: "#ffffff",
+//           }}
+//         >
+//           <Table
+//             stickyHeader
+//             size="medium"
+//             sx={{
+//               fontFamily: "'Roboto Slab', serif",
+//               "& .MuiTableCell-root": {
+//                 padding: "8px 16px",
+//                 fontSize: "0.875rem",
+//                 fontFamily: "'Roboto Slab', serif",
+//               },
+//               "& .MuiTableRow-root": {
+//                 height: "48px",
+//               },
+//             }}
+//           >
+//             <TableHead>
+//               <TableRow>
+//                 {columns.map((column) => (
+//                   <TableCell
+//                     key={column.id}
+//                     sortDirection={orderBy === column.id ? order : false}
+//                     sx={{
+//                       backgroundColor: "orange",
+//                       color: "#ffffff",
+//                       fontWeight: "bold",
+//                       whiteSpace: "nowrap",
+//                       overflow: "hidden",
+//                       textOverflow: "ellipsis",
+//                       py: 1,
+//                     }}
+//                   >
+//                     <TableSortLabel
+//                       active={orderBy === column.id}
+//                       direction={orderBy === column.id ? order : "asc"}
+//                       onClick={() => handleRequestSort(column.id)}
+//                       sx={{
+//                         color: "#ffffff",
+//                         "&.Mui-active": {
+//                           color: "#ffffff",
+//                         },
+//                         "& .MuiTableSortLabel-icon": {
+//                           color: "#ffffff !important",
+//                         },
+//                       }}
+//                     >
+//                       {column.label}
+//                     </TableSortLabel>
+//                   </TableCell>
+//                 ))}
+//               </TableRow>
+//             </TableHead>
+
+//             <TableBody>
+//               {loading ? (
+//                 <TableRow>
+//                   <TableCell
+//                     colSpan={columns.length}
+//                     align="center"
+//                     sx={{ py: 2 }}
+//                   >
+//                     <CircularProgress size={24} />
+//                   </TableCell>
+//                 </TableRow>
+//               ) : sortedData.length === 0 ? (
+//                 <TableRow>
+//                   <TableCell
+//                     colSpan={columns.length}
+//                     align="center"
+//                     sx={{ py: 2 }}
+//                   >
+//                     No records found
+//                   </TableCell>
+//                 </TableRow>
+//               ) : (
+//                 sortedData.map((row, idx) => (
+//                   <TableRow
+//                     key={idx}
+//                     sx={{
+//                       backgroundColor: idx % 2 === 0 ? "#f0f9ff" : "#ffffff",
+//                       transition: "all 0.3s ease-in-out",
+//                       height: "48px",
+//                       "&:hover": {
+//                         backgroundColor: "#fff176",
+//                         borderRadius: "16px",
+//                         boxShadow: "0 8px 24px rgba(255, 202, 40, 0.4)",
+//                         transform: "scale(1.01)",
+//                         cursor: "pointer",
+//                       },
+//                     }}
+//                   >
+//                     {columns.map((column) => (
 //                       <TableCell
 //                         key={column.id}
-//                         sortDirection={
-//                           tables[tableName].orderBy === column.id
-//                             ? tables[tableName].order
-//                             : false
-//                         }
 //                         sx={{
-//                           backgroundColor: "#1976d2",
-//                           color: "#ffffff",
-//                           fontWeight: "bold",
-//                           whiteSpace: "nowrap",
+//                           py: 1,
+//                           maxWidth: "200px",
 //                           overflow: "hidden",
 //                           textOverflow: "ellipsis",
-//                           py: 1,
+//                           whiteSpace: "nowrap",
 //                         }}
 //                       >
-//                         <TableSortLabel
-//                           active={tables[tableName].orderBy === column.id}
-//                           direction={
-//                             tables[tableName].orderBy === column.id
-//                               ? tables[tableName].order
-//                               : "asc"
-//                           }
-//                           onClick={() =>
-//                             handleRequestSort(tableName, column.id)
-//                           }
-//                           sx={{
-//                             color: "#ffffff",
-//                             "&.Mui-active": {
-//                               color: "#ffffff",
-//                             },
-//                             "& .MuiTableSortLabel-icon": {
-//                               color: "#ffffff !important",
-//                             },
-//                           }}
-//                         >
-//                           {column.label}
-//                         </TableSortLabel>
+//                         {typeof row[column.id] === "boolean"
+//                           ? row[column.id].toString()
+//                           : row[column.id]}
 //                       </TableCell>
 //                     ))}
 //                   </TableRow>
-//                 </TableHead>
+//                 ))
+//               )}
+//             </TableBody>
+//           </Table>
+//         </TableContainer>
 
-//                 <TableBody>
-//                   {tables[tableName].loading ? (
-//                     <TableRow>
-//                       <TableCell
-//                         colSpan={tables[tableName].columns.length}
-//                         align="center"
-//                         sx={{ py: 2 }}
-//                       >
-//                         <CircularProgress size={24} />
-//                       </TableCell>
-//                     </TableRow>
-//                   ) : tables[tableName].data.length === 0 ? (
-//                     <TableRow>
-//                       <TableCell
-//                         colSpan={tables[tableName].columns.length}
-//                         align="center"
-//                         sx={{ py: 2 }}
-//                       >
-//                         No records found
-//                       </TableCell>
-//                     </TableRow>
-//                   ) : (
-//                     getActiveTableData().map((row, idx) => (
-//                       <TableRow
-//                         key={idx}
-//                         sx={{
-//                           backgroundColor:
-//                             idx % 2 === 0 ? "#f0f9ff" : "#ffffff",
-//                           transition: "all 0.3s ease-in-out",
-//                           height: "48px",
-//                           borderRadius: 2,
-//                           "&:hover": {
-//                             backgroundColor: "#fff176",
-//                             borderRadius: "16px",
-//                             boxShadow: "0 8px 24px rgba(255, 202, 40, 0.8)",
-//                             transform: "scale(1.015)",
-//                             cursor: "pointer",
-//                             zIndex: 2,
-//                           },
-//                         }}
-//                       >
-//                         {tables[tableName].columns.map((column) => (
-//                           <TableCell
-//                             key={column.id}
-//                             sx={{
-//                               py: 1,
-//                               maxWidth: "200px",
-//                               overflow: "hidden",
-//                               textOverflow: "ellipsis",
-//                               whiteSpace: "nowrap",
-//                             }}
-//                           >
-//                             {typeof row[column.id] === "boolean"
-//                               ? row[column.id].toString()
-//                               : row[column.id]}
-//                           </TableCell>
-//                         ))}
-//                       </TableRow>
-//                     ))
-//                   )}
-//                 </TableBody>
-//               </Table>
-//             </TableContainer>
-
-//             {/* Pagination */}
-//             <TablePagination
-//               component="div"
-//               count={tables[tableName].totalCount}
-//               page={tables[tableName].page}
-//               onPageChange={(e, page) => handleChangePage(tableName, e, page)}
-//               rowsPerPage={tables[tableName].rowsPerPage}
-//               onRowsPerPageChange={(e) => handleChangeRowsPerPage(tableName, e)}
-//               rowsPerPageOptions={[5, 10, 25]}
-//               sx={{
-//                 backgroundColor: "#fafafa",
-//                 borderTop: "1px solid #e0e0e0",
-//                 px: 2,
-//               }}
-//             />
-//           </div>
-//         ))}
+//         <TablePagination
+//           component="div"
+//           count={totalCount}
+//           page={page}
+//           onPageChange={handleChangePage}
+//           rowsPerPage={rowsPerPage}
+//           onRowsPerPageChange={handleChangeRowsPerPage}
+//           rowsPerPageOptions={[5, 10, 25, 50]}
+//         />
 //       </Paper>
 //     </Box>
 //   );
 // }
 
-// export default AllDataView;
+// export default ApplicationList;
